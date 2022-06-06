@@ -148,6 +148,47 @@ namespace AzureFunctionApp
                 return req.CreateResponse(HttpStatusCode.OK, "Wave API product ID is not valid !!! Reason: {0}", string.Format(ex.Message));
             }
         }
+
+        [FunctionName("ActualAPI")]
+        public static async Task<HttpResponseMessage> ActualAPI(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestMessage req, ILogger log)
+        {
+            log.LogInformation("Calling my External API");
+
+            try
+            {
+                HttpClientHandler clientHandler = new HttpClientHandler();
+                clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+
+                HttpClient client = new HttpClient(clientHandler);
+                HttpRequestMessage myRequest = new HttpRequestMessage(HttpMethod.Get, string.Format("yourUrl")); //replace it with actual url
+                myRequest.Headers.Add("Authorization-Token", "yourToken"); //replace it with actual token
+
+
+                HttpResponseMessage httpresponse = await client.SendAsync(myRequest);
+                APIResponse[] isValidWaveProduct = await httpresponse.Content.ReadAsAsync<APIResponse[]>();
+
+
+
+                return req.CreateResponse(HttpStatusCode.OK, isValidWaveProduct);
+            }
+            catch (Exception ex)
+            {
+
+                return req.CreateResponse(HttpStatusCode.OK, "Wave API product ID is not valid !!! Reason: {0}", string.Format(ex.Message));
+            }
+        }
+    }
+
+    public class APIResponse
+    {
+        public string CustomerID { get; set; }
+        public int ActionID { get; set; }
+        public int ChannelID { get; set; }
+        public string TemplateID { get; set; }
+        public string ScheduleTime { get; set; }
+        public string PromoCode { get; set; }
+        public string[] CustomerAttributes { get; set; }
     }
 
     public class WaveProductModel
